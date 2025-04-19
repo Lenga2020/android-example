@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Android 案例</string>
+    <string name="app_activity_chart">Android 图表案例</string>
+    <string name="app_activity_notification">Android 云通知测试</string>
+    <string name="app_fcm_name">Firebase 云消息通知</string>
+    <string name="app_text_unknown">未知</string>
+    <string name="app_text_copy">复制</string>
+    <string name="app_text_not_grant_permission">未成功授予权限</string>
+    <string name="app_text_copied">已复制到粘贴板</string>
+</resources>

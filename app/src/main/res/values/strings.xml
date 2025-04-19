@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_phone_icon" translatable="false">Phone\'s icon</string>
+
+    <string name="app_name">Android Examples</string>
+
+    <string name="app_activity_chart">Android Chart Demo</string>
+    <string name="app_activity_notification">Android Cloud Notification Demo</string>
+
+    <string name="app_fcm_name">Firebase Cloud Messaging</string>
+    <string name="app_text_unknown">UNKNOWN</string>
+    <string name="app_text_copy">Copy</string>
+    <string name="app_text_not_grant_permission">Permission Denied</string>
+    <string name="app_text_copied">Copied to clipboard!</string>
+</resources>
