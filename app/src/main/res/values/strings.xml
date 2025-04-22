@@ -5,10 +5,20 @@
 
     <string name="app_activity_chart">Android Chart Demo</string>
     <string name="app_activity_notification">Android Cloud Notification Demo</string>
+    <string name="app_activity_google_billing">Google Billing Demo</string>
 
     <string name="app_fcm_name">Firebase Cloud Messaging</string>
     <string name="app_text_unknown">UNKNOWN</string>
     <string name="app_text_copy">Copy</string>
     <string name="app_text_not_grant_permission">Permission Denied</string>
     <string name="app_text_copied">Copied to clipboard!</string>
+    <string name="app_text_pd">Product Description: </string>
+    <string name="app_text_purchase_cancel">The user canceled the purchase.</string>
+    <string name="app_text_purchase_fail">Purchase failed.</string>
+    <string name="app_text_service_unavailable">Google Play services are unavailable. Please check your network connection.</string>
+    <string name="app_text_play_unavailable">Unable to connect to Google Play. Please ensure the Play Store is installed and you are logged in.</string>
+    <string name="app_text_device_unsupported">This feature is not supported on the current device.</string>
+    <string name="app_text_error">Error</string>
+    <string name="app_text_purchase_acknowledged">Purchase successful and acknowledged.</string>
+    <string name="app_text_purchase_error">Failed to acknowledge the purchase: </string>
 </resources>

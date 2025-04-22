@@ -146,6 +146,14 @@ public class AppHomeActivity extends ParentActivity {
                     .setParentActivityClass(AppNotificationActivity.class)
                     .create();
             this.functionActivities.add(functionActivity2);
+
+            final FunctionActivity functionActivity3 = new FunctionActivity.Builder()
+                    .setTitle(mActivity.getString(R.string.app_activity_google_billing))
+                    .setDescription(mActivity.getString(R.string.app_activity_google_billing))
+                    .setResourceId(R.drawable.app_phone_google)
+                    .setParentActivityClass(AppGoogleBillingActivity.class)
+                    .create();
+            // this.functionActivities.add(functionActivity3);
         }
 
         public void setOnClickListener(@NonNull final FunctionOnClickListener clickListener) {

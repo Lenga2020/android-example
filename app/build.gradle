@@ -65,6 +65,7 @@ dependencies {
     implementation libs.activity
     implementation libs.constraintlayout
 
+    implementation libs.play.billing
     implementation libs.android.chart
 
     implementation platform(libs.firebase.bom)

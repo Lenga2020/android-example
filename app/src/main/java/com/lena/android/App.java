@@ -8,11 +8,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.lena.android.api.PhoneManager;
+import com.lena.android.db.ConstantSharedPreferences;
 import com.lena.android.utils.Logger;
 import com.lena.android.utils.TimeUtil;
 import com.lena.android.utils.VerifyUtil;
 
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 public class App extends Application {
     private final static String TAG = "Application";
@@ -25,6 +28,8 @@ public class App extends Application {
     private int versionCode;
     private String versionName;
 
+    public final HashSet<String> googleBillingIds = new HashSet<>();
+
     public static App app;
 
     @Override
@@ -35,6 +40,11 @@ public class App extends Application {
         applicationId = BuildConfig.APPLICATION_ID;
         versionCode = BuildConfig.VERSION_CODE;
         versionName = BuildConfig.VERSION_NAME;
+
+        Set<String> acknowledgeIds = ConstantSharedPreferences.getAcknowledgeIds(this);
+        if (null != acknowledgeIds && !acknowledgeIds.isEmpty()) {
+            googleBillingIds.addAll(acknowledgeIds);
+        }
 
         activities = 0;
         registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
