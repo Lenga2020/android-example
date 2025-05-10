@@ -2,6 +2,7 @@ package com.lena.android
 
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -9,6 +10,7 @@ import android.util.DisplayMetrics
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowInsetsController
+import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import androidx.annotation.RequiresApi
@@ -79,6 +81,20 @@ open class ParentActivity: AppCompatActivity() {
     private fun hasNavigationBar(): Boolean {
         val resourceId = resources.getIdentifier("config_showNavigationBar", "bool", "android")
         return resourceId > 0 && resources.getBoolean(resourceId)
+    }
+
+    /**
+     * 部分机型除了设置主题，可能还需要以下代码才可以真正全屏
+     */
+    fun enableFullScreen() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            val window = window
+            // window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS | WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            window.statusBarColor = Color.TRANSPARENT // 状态栏透明
+            // window.setNavigationBarColor(Color.TRANSPARENT) // 导航栏透明
+        }
     }
 
     fun setWindowLightStatusBar(status: Boolean) {

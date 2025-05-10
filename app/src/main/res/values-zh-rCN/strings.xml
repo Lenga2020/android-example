@@ -4,6 +4,7 @@
     <string name="app_activity_chart">Android 图表案例</string>
     <string name="app_activity_notification">Android 云通知测试</string>
     <string name="app_activity_google_billing">谷歌内购Demo</string>
+    <string name="app_activity_tiktok_demo">短视频Demo</string>
     <string name="app_fcm_name">Firebase 云消息通知</string>
     <string name="app_text_unknown">未知</string>
     <string name="app_text_copy">复制</string>
@@ -13,7 +14,7 @@
     <string name="app_text_purchase_cancel">用户取消购买</string>
     <string name="app_text_purchase_fail">支付失败</string>
     <string name="app_text_service_unavailable">Google Play 服务不可用，请检查网络连接</string>
-    <string name="app_text_play_unavailable">Unable to connect to Google Play. Please ensure the Play Store is installed and you are logged in.</string>
+    <string name="app_text_play_unavailable">无法连接谷歌Play，请确保已安装Play Store且已登录</string>
     <string name="app_text_device_unsupported">当前设备不支持此功能</string>
     <string name="app_text_error">错误</string>
     <string name="app_text_purchase_acknowledged">购买成功并已确认</string>

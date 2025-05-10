@@ -6,6 +6,7 @@
     <string name="app_activity_chart">Android Chart Demo</string>
     <string name="app_activity_notification">Android Cloud Notification Demo</string>
     <string name="app_activity_google_billing">Google Billing Demo</string>
+    <string name="app_activity_tiktok_demo">Google Video Demo</string>
 
     <string name="app_fcm_name">Firebase Cloud Messaging</string>
     <string name="app_text_unknown">UNKNOWN</string>
@@ -21,4 +22,9 @@
     <string name="app_text_error">Error</string>
     <string name="app_text_purchase_acknowledged">Purchase successful and acknowledged.</string>
     <string name="app_text_purchase_error">Failed to acknowledge the purchase: </string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="app_hello_blank_fragment" translatable="false">Hello blank fragment</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

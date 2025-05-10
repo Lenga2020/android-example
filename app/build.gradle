@@ -60,6 +60,10 @@ android {
 }
 
 dependencies {
+    implementation 'com.google.android.exoplayer:exoplayer:2.18.5'
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.18.5'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.18.5'
+
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity

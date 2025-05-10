@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/video_tags_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragment.AppVideoTagsFragment">
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/video_tags"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <LinearLayout
+        android:id="@+id/tabs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_margin="12dp">
+
+        <View
+            android:id="@+id/tab1"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:background="@color/app_teal_200"
+            android:layout_margin="12dp"/>
+
+        <View
+            android:id="@+id/tab2"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:background="@color/app_teal_700"
+            android:layout_margin="12dp"/>
+
+        <View
+            android:id="@+id/tab3"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:background="@color/app_purple_200"
+            android:layout_margin="12dp"/>
+
+        <View
+            android:id="@+id/tab4"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:background="@color/app_purple_500"
+            android:layout_margin="12dp"/>
+
+        <View
+            android:id="@+id/tab5"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:background="@color/app_purple_700"
+            android:layout_margin="12dp"/>
+    </LinearLayout>
+</FrameLayout>

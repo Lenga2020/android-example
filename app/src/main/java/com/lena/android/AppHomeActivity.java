@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.lena.android.databinding.AppActivityHomeBinding;
 import com.lena.android.databinding.AppFunctionLayoutBinding;
+import com.lena.android.service.KeepService;
 import com.lena.android.service.MyFirebaseMessagingService;
 import com.lena.android.utils.VerifyUtil;
 
@@ -63,6 +64,9 @@ public class AppHomeActivity extends ParentActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             final NotificationChannel channel = new NotificationChannel(MyFirebaseMessagingService.CHANNEL_ID, getString(R.string.app_fcm_name), NotificationManager.IMPORTANCE_HIGH);
             manager.createNotificationChannel(channel);
+
+            final NotificationChannel channel2 = new NotificationChannel(KeepService.CHANNEL_ID, getString(R.string.app_name), NotificationManager.IMPORTANCE_DEFAULT);
+            manager.createNotificationChannel(channel2);
         }
         manager.cancelAll();
         App.app.notificationIndex = 0;
@@ -73,6 +77,12 @@ public class AppHomeActivity extends ParentActivity {
             final GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
             binding.functions.setAdapter(adapter);
             binding.functions.setLayoutManager(layoutManager);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(new Intent(this, KeepService.class));
+            } else {
+                startService(new Intent(this, KeepService.class));
+            }
         }
     }
 
@@ -108,7 +118,10 @@ public class AppHomeActivity extends ParentActivity {
         @Override
         public void onLongClick(@NonNull View view, int pos, @NonNull FunctionActivity functionActivity) {
             if (getClickAble()) {
-
+                if (AppShortVideosActivity.class.getName().equals(functionActivity.parentActivityClass.getName())) {
+                    Intent intent = new Intent(AppHomeActivity.this, KeepService.class);
+                    stopService(intent);
+                }
             }
         }
 
@@ -154,6 +167,15 @@ public class AppHomeActivity extends ParentActivity {
                     .setParentActivityClass(AppGoogleBillingActivity.class)
                     .create();
             // this.functionActivities.add(functionActivity3);
+
+
+            final FunctionActivity functionActivity4 = new FunctionActivity.Builder()
+                    .setTitle(mActivity.getString(R.string.app_activity_tiktok_demo))
+                    .setDescription(mActivity.getString(R.string.app_activity_tiktok_demo))
+                    .setResourceId(R.mipmap.app_ic_launcher)
+                    .setParentActivityClass(AppShortVideosActivity.class)
+                    .create();
+            this.functionActivities.add(functionActivity4);
         }
 
         public void setOnClickListener(@NonNull final FunctionOnClickListener clickListener) {

@@ -7,12 +7,16 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.android.exoplayer2.database.StandaloneDatabaseProvider;
+import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor;
+import com.google.android.exoplayer2.upstream.cache.SimpleCache;
 import com.lena.android.api.PhoneManager;
 import com.lena.android.db.ConstantSharedPreferences;
 import com.lena.android.utils.Logger;
 import com.lena.android.utils.TimeUtil;
 import com.lena.android.utils.VerifyUtil;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -31,6 +35,7 @@ public class App extends Application {
     public final HashSet<String> googleBillingIds = new HashSet<>();
 
     public static App app;
+    public SimpleCache cache;
 
     @Override
     public void onCreate() {
@@ -40,6 +45,8 @@ public class App extends Application {
         applicationId = BuildConfig.APPLICATION_ID;
         versionCode = BuildConfig.VERSION_CODE;
         versionName = BuildConfig.VERSION_NAME;
+
+        cache = initVideoCache();
 
         Set<String> acknowledgeIds = ConstantSharedPreferences.getAcknowledgeIds(this);
         if (null != acknowledgeIds && !acknowledgeIds.isEmpty()) {
@@ -128,5 +135,14 @@ public class App extends Application {
     @NonNull
     public String getVersionName() {
         return VerifyUtil.aNotEmptyString(versionName)? versionName: "UNKNOWN";
+    }
+
+    private final static String CACHE_DIR = "videos";
+    private final static long CACHE_SIZE = 2L * 1000L * 1000L * 1000L; //2GB; 1000bytes=1kb, 1000*1000bytes=1mb, 1000*1000*1000bytes=1GB
+    private SimpleCache initVideoCache() {
+        final File cacheDir = new File(getCacheDir(), CACHE_DIR);
+        final LeastRecentlyUsedCacheEvictor cacheEvict = new LeastRecentlyUsedCacheEvictor(CACHE_SIZE);
+        final StandaloneDatabaseProvider databaseProvider = new StandaloneDatabaseProvider(this);
+        return new SimpleCache(cacheDir, cacheEvict, databaseProvider);
     }
 }
