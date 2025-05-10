@@ -84,29 +84,53 @@ public class AppVideoTagsFragment extends ParentFragment {
     }
 
     @Override
-    public void onPause() {
-        if (null != videoTagAdapter) videoTagAdapter.pauseAll();
-        super.onPause();
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         if (flagResume && null != videoTagAdapter) {
+            flagResume = false;
             videoTagAdapter.resumeCurrent(binding.videoTags.getCurrentItem());
         }
     }
 
     @Override
+    public void onPause() {
+        if (null != videoTagAdapter) {
+            videoTagAdapter.pauseAll();
+            flagResume = true;
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (null == videoTagAdapter) return;
+
+        if (hidden) {
+            flagResume = true;
+            videoTagAdapter.pauseAll();
+        } else {
+            if (flagResume) {
+                flagResume = false;
+                videoTagAdapter.resumeCurrent(binding.videoTags.getCurrentItem());
+            }
+        }
+    }
+
+    @Override
     public void onStop() {
-        if (null != videoTagAdapter) videoTagAdapter.stopAll();
+        if (null != videoTagAdapter) {
+            videoTagAdapter.stopAll();
+            flagResume = true;
+        }
         super.onStop();
-        flagResume = true;
     }
 
     @Override
     public void onDestroy() {
-        if (null != videoTagAdapter) videoTagAdapter.destroyAll();
+        if (null != videoTagAdapter) {
+            videoTagAdapter.destroyAll();
+        }
         super.onDestroy();
     }
 
@@ -137,10 +161,11 @@ public class AppVideoTagsFragment extends ParentFragment {
         public void resumeCurrent(int pos) {
             try {
                 AppShortVideosFragment appShortVideosFragment = fragments.get(pos);
-                if (null != appShortVideosFragment)
+                if (null != appShortVideosFragment) {
                     appShortVideosFragment.gonnaPlay();
-            } catch (IndexOutOfBoundsException ignore) {
-                Log.e("TAG", "resumeCurrent: ", ignore);
+                }
+            } catch (IndexOutOfBoundsException e) {
+                Log.e("TAG", "resumeCurrent: ", e);
             }
         }
 
@@ -162,6 +187,8 @@ public class AppVideoTagsFragment extends ParentFragment {
                 fragment.destroy();
             }
         }
+
+
 
         private void type1() {
             final ArrayList<String> urls1 = new ArrayList<>();

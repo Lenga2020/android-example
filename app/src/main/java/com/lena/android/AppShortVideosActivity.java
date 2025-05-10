@@ -77,13 +77,25 @@ public class AppShortVideosActivity extends ParentActivity {
         if (null != parentViewModel) parentViewModel.liveLifeData.postValue(ShortLifecycleModel.Lifecycle.DESTROY);
     }
 
+    private Fragment currentFragment;
     private void changeTab(List<Fragment> fragments, int tab) {
         if (!getActive()) return;
         if (null == fragments || fragments.isEmpty() || tab >= fragments.size()) return;
 
-        FragmentManager supportFragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = supportFragmentManager.beginTransaction();
-        fragmentTransaction.replace(binding.svContainers.getId(), fragments.get(tab));
+        final FragmentManager supportFragmentManager = getSupportFragmentManager();
+        final FragmentTransaction fragmentTransaction = supportFragmentManager.beginTransaction();
+
+        final Fragment tabFragment = fragments.get(tab);
+        if (!tabFragment.isAdded()) {
+            fragmentTransaction.add(binding.svContainers.getId(), tabFragment);
+        }
+
+        if (currentFragment != null && currentFragment != tabFragment) {
+            fragmentTransaction.hide(currentFragment);
+        }
+        fragmentTransaction.show(tabFragment);
+        currentFragment = tabFragment;
+
         fragmentTransaction.commitAllowingStateLoss();
     }
 

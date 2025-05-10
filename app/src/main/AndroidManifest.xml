@@ -36,7 +36,12 @@
             android:name=".AppShortVideosActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:theme="@style/App.Theme.Fullscreen" />
+            android:theme="@style/App.Theme.Fullscreen">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".AppNotificationActivity"
             android:exported="false"
@@ -52,11 +57,7 @@
             android:exported="true"
             android:launchMode="singleTask"
             android:screenOrientation="portrait">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
         <activity
             android:name=".AppGoogleBillingActivity"
@@ -78,5 +79,4 @@
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="com.lena.android.notification.message1" />
     </application>
-
 </manifest>

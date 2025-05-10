@@ -13,9 +13,9 @@
 -dontwarn retrofit2.KotlinExtensions
 -dontwarn retrofit2.KotlinExtensions$*
 
--if interface * { @retrofit2.http.* <methods>; }
--if interface * { @retrofit2.http.* <methods>; }
--if interface * { @retrofit2.http.* public *** *(...); }
+#-if interface * { @retrofit2.http.* <methods>; }
+#-if interface * { @retrofit2.http.* <methods>; }
+#-if interface * { @retrofit2.http.* public *** *(...); }
 -keep,allowobfuscation interface * extends <1>
 -keep,allowobfuscation interface <1>
 -keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
