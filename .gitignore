@@ -29,5 +29,7 @@ out/
 captures/
 build/
 
+/app/release/
+
 .cxx/
 .navigation/
