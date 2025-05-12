@@ -57,6 +57,11 @@ public class AppShortVideosActivity extends ParentActivity {
     protected void onResume() {
         super.onResume();
         if (null != parentViewModel) parentViewModel.liveLifeData.postValue(ShortLifecycleModel.Lifecycle.RESUME);
+        if (currentFragment instanceof AppShortVideosFragment) {
+            ((AppShortVideosFragment) currentFragment).gonnaPlay();
+        } else if (currentFragment instanceof AppVideoTagsFragment) {
+            ((AppVideoTagsFragment) currentFragment).gonnaResume();
+        }
     }
 
     @Override
@@ -68,7 +73,9 @@ public class AppShortVideosActivity extends ParentActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (null != parentViewModel) parentViewModel.liveLifeData.postValue(ShortLifecycleModel.Lifecycle.STOP);
+        if (null != parentViewModel) {
+            parentViewModel.liveLifeData.postValue(ShortLifecycleModel.Lifecycle.STOP);
+        }
     }
 
     @Override
@@ -80,24 +87,45 @@ public class AppShortVideosActivity extends ParentActivity {
     private Fragment currentFragment;
     private void changeTab(List<Fragment> fragments, int tab) {
         if (!getActive()) return;
-        if (null == fragments || fragments.isEmpty() || tab >= fragments.size()) return;
+        if (fragments == null || fragments.isEmpty() || tab >= fragments.size()) return;
 
-        final FragmentManager supportFragmentManager = getSupportFragmentManager();
-        final FragmentTransaction fragmentTransaction = supportFragmentManager.beginTransaction();
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction ft = fm.beginTransaction();
 
-        final Fragment tabFragment = fragments.get(tab);
-        if (!tabFragment.isAdded()) {
-            fragmentTransaction.add(binding.svContainers.getId(), tabFragment);
+        Fragment targetFragment = fragments.get(tab);
+        if (targetFragment == null || currentFragment == targetFragment) return;
+
+        // 隐藏当前 Fragment
+        if (currentFragment != null) {
+            ft.hide(currentFragment);
+            if (currentFragment instanceof AppShortVideosFragment) {
+                ((AppShortVideosFragment) currentFragment).disable();
+            } else if (currentFragment instanceof AppVideoTagsFragment) {
+                ((AppVideoTagsFragment) currentFragment).disable();
+            }
         }
 
-        if (currentFragment != null && currentFragment != tabFragment) {
-            fragmentTransaction.hide(currentFragment);
+        // 添加或显示目标 Fragment
+        if (!targetFragment.isAdded()) {
+            ft.add(binding.svContainers.getId(), targetFragment);
+        } else {
+            ft.show(targetFragment);
         }
-        fragmentTransaction.show(tabFragment);
-        currentFragment = tabFragment;
 
-        fragmentTransaction.commitAllowingStateLoss();
+        // 设置主导航 Fragment（推荐）
+        ft.setPrimaryNavigationFragment(targetFragment);
+
+        // 启动目标 Fragment 的逻辑
+        if (targetFragment instanceof AppShortVideosFragment) {
+            ((AppShortVideosFragment) targetFragment).gonnaPlay();
+        } else if (targetFragment instanceof AppVideoTagsFragment) {
+            ((AppVideoTagsFragment) targetFragment).gonnaResume();
+        }
+
+        currentFragment = targetFragment;
+        ft.commitAllowingStateLoss();
     }
+
 
     private ArrayList<Fragment> initFragments() {
         final ArrayList<Fragment> fragments = new ArrayList<>();

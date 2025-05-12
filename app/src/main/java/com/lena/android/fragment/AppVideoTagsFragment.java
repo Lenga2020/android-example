@@ -7,6 +7,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,6 +17,7 @@ import android.view.ViewGroup;
 import com.lena.android.R;
 import com.lena.android.databinding.AppFragmentViedoTagsBinding;
 import com.lena.android.utils.Logger;
+import com.lena.android.widget.MySnackBar;
 
 import org.checkerframework.checker.units.qual.A;
 
@@ -25,16 +27,23 @@ import java.util.Collections;
 public class AppVideoTagsFragment extends ParentFragment {
     private AppFragmentViedoTagsBinding binding;
 
-    private boolean flagResume = false;
+    private boolean enableSelfManager = false;
+    private boolean iCanAutoPlay = false;
     private int type = 0;
     private VideoTagAdapter videoTagAdapter;
 
     private final static String ARG = "type";
+    private final static String ARG_SELF_MANAGER = "arg_self_manager";
     public final static class Builder {
         private final Bundle bundle = new Bundle();
 
         public Builder setType(int type) {
             bundle.putInt(ARG, type);
+            return this;
+        }
+
+        public Builder enableSelfManager() {
+            bundle.putBoolean(ARG_SELF_MANAGER, true);
             return this;
         }
 
@@ -51,6 +60,7 @@ public class AppVideoTagsFragment extends ParentFragment {
         final Bundle arguments = getArguments();
         if (null != arguments) {
             type = arguments.getInt(ARG, 0);
+            enableSelfManager = arguments.getBoolean(ARG_SELF_MANAGER, false);
         }
     }
 
@@ -67,7 +77,23 @@ public class AppVideoTagsFragment extends ParentFragment {
             videoTagAdapter = new VideoTagAdapter(getActivity(), type);
             binding.videoTags.setAdapter(videoTagAdapter);
             binding.videoTags.setUserInputEnabled(true);
+            binding.videoTags.setOffscreenPageLimit(1);
+            binding.videoTags.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+                private int last = -1;
 
+                @Override
+                public void onPageSelected(int position) {
+                    super.onPageSelected(position);
+                    if (last == position) return;
+                    last = position;
+                    if (null != videoTagAdapter && iCanAutoPlay) {
+                        videoTagAdapter.pauseAll();
+                        videoTagAdapter.resumeCurrent(position);
+                    }
+                }
+            });
+
+            binding.videoTags.setCurrentItem(0);
             if (type == 1) {
                 binding.tab4.setVisibility(View.GONE);
                 binding.tab5.setVisibility(View.GONE);
@@ -86,8 +112,19 @@ public class AppVideoTagsFragment extends ParentFragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (flagResume && null != videoTagAdapter) {
-            flagResume = false;
+        if (enableSelfManager) {
+            Logger.debug("Manager", getClass().getName() + "拥有自主控制权");
+            gonnaResume();
+        }
+    }
+
+    public void disable() {
+        enableSelfManager = false;
+    }
+
+    public void gonnaResume() {
+        iCanAutoPlay = true;
+        if (null != videoTagAdapter) {
             videoTagAdapter.resumeCurrent(binding.videoTags.getCurrentItem());
         }
     }
@@ -96,32 +133,14 @@ public class AppVideoTagsFragment extends ParentFragment {
     public void onPause() {
         if (null != videoTagAdapter) {
             videoTagAdapter.pauseAll();
-            flagResume = true;
         }
         super.onPause();
-    }
-
-    @Override
-    public void onHiddenChanged(boolean hidden) {
-        super.onHiddenChanged(hidden);
-        if (null == videoTagAdapter) return;
-
-        if (hidden) {
-            flagResume = true;
-            videoTagAdapter.pauseAll();
-        } else {
-            if (flagResume) {
-                flagResume = false;
-                videoTagAdapter.resumeCurrent(binding.videoTags.getCurrentItem());
-            }
-        }
     }
 
     @Override
     public void onStop() {
         if (null != videoTagAdapter) {
             videoTagAdapter.stopAll();
-            flagResume = true;
         }
         super.onStop();
     }
@@ -132,6 +151,14 @@ public class AppVideoTagsFragment extends ParentFragment {
             videoTagAdapter.destroyAll();
         }
         super.onDestroy();
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (hidden) {
+            if (null != videoTagAdapter) videoTagAdapter.pauseAll();
+        }
     }
 
     private final static class VideoTagAdapter extends FragmentStateAdapter {
@@ -170,7 +197,6 @@ public class AppVideoTagsFragment extends ParentFragment {
         }
 
         public void pauseAll() {
-            Logger.debug("Videos", "Pause all");
             for (AppShortVideosFragment fragment : fragments) {
                 fragment.pause();
             }
@@ -189,28 +215,27 @@ public class AppVideoTagsFragment extends ParentFragment {
         }
 
 
-
         private void type1() {
             final ArrayList<String> urls1 = new ArrayList<>();
             for (int i = 1; i < 95; i++) {
                 String url = "https://v.walktracker.fun/male/V" + i + ".mp4";
                 urls1.add(url);
             }
-            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls1).build());
+            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls1).disableSelfManager().build());
 
             final ArrayList<String> urls2 = new ArrayList<>();
             for (int i = 1; i < 95; i++) {
                 String url = "https://v.walktracker.fun/female/V" + i + ".mp4";
                 urls2.add(url);
             }
-            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls2).build());
+            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls2).disableSelfManager().build());
 
             final ArrayList<String> urls3 = new ArrayList<>();
             for (int i = 1; i < 95; i++) {
                 urls3.add("https://v.walktracker.fun/female/V" + i + ".mp4");
                 urls3.add("https://v.walktracker.fun/male/V" + i + ".mp4");
             }
-            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls3).build());
+            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls3).disableSelfManager().build());
         }
 
         private void type2() {
@@ -219,21 +244,21 @@ public class AppVideoTagsFragment extends ParentFragment {
                 String url = "https://v.walktracker.fun/male/V" + i + ".mp4";
                 urls1.add(url);
             }
-            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls1).build());
+            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls1).disableSelfManager().build());
 
             final ArrayList<String> urls2 = new ArrayList<>();
             for (int i = 95; i >= 1; i--) {
                 String url = "https://v.walktracker.fun/female/V" + i + ".mp4";
                 urls2.add(url);
             }
-            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls2).build());
+            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls2).disableSelfManager().build());
 
             final ArrayList<String> urls3 = new ArrayList<>();
             for (int i = 95; i >= 1; i--) {
                 urls3.add("https://v.walktracker.fun/female/V" + i + ".mp4");
                 urls3.add("https://v.walktracker.fun/male/V" + i + ".mp4");
             }
-            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls3).build());
+            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls3).disableSelfManager().build());
 
             final ArrayList<String> urls4 = new ArrayList<>();
             for (int i = 1; i < 95; i++) {
@@ -243,7 +268,7 @@ public class AppVideoTagsFragment extends ParentFragment {
                     urls4.add("https://v.walktracker.fun/male/V" + i + ".mp4");
                 }
             }
-            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls4).build());
+            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls4).disableSelfManager().build());
 
             final ArrayList<String> urls5 = new ArrayList<>();
             for (int i = 95; i >= 1; i--) {
@@ -251,7 +276,7 @@ public class AppVideoTagsFragment extends ParentFragment {
                 urls5.add("https://v.walktracker.fun/male/V" + i + ".mp4");
             }
             Collections.shuffle(urls5);
-            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls5).build());
+            fragments.add(new AppShortVideosFragment.Builder().setUrls(urls5).disableSelfManager().build());
         }
     }
 }

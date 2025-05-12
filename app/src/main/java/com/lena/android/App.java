@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+
 public class App extends Application {
     private final static String TAG = "Application";
 
@@ -113,6 +114,8 @@ public class App extends Application {
         final String timeZoneId = TimeUtil.getTimeZoneId();
         final String logger = String.format(Locale.getDefault(), "App launched at: %s(%s)", TimeUtil.getDateTime(timeMillis, timeZoneId), timeZoneId);
         Logger.debug(TAG, logger);
+
+
     }
 
     public boolean isReleaseMode() {

@@ -15,8 +15,8 @@ android {
         minSdk 24
         targetSdk 34
 
-        versionCode 2
-        versionName "1.0.2"
+        versionCode 4
+        versionName "1.0.4"
 
         resourcePrefix "app"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -60,6 +60,9 @@ android {
 }
 
 dependencies {
+//    debugImplementation libs.leakcanary
+//    debugImplementation libs.leakcanary.process
+
     implementation 'com.google.android.exoplayer:exoplayer:2.18.5'
     implementation 'com.google.android.exoplayer:exoplayer-core:2.18.5'
     implementation 'com.google.android.exoplayer:exoplayer-ui:2.18.5'

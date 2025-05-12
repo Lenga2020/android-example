@@ -13,7 +13,6 @@ import androidx.viewpager2.widget.ViewPager2;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -34,18 +33,15 @@ import com.lena.android.utils.Logger;
 import com.lena.android.utils.VerifyUtil;
 import com.lena.android.vm.ShortLifecycleModel;
 import com.lena.android.widget.MySnackBar;
-import com.lena.android.widget.MyToast;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 可以侧滑时，滑动视频会闪屏，应该实现侧滑不灵敏
- */
 public class AppShortVideosFragment extends ParentFragment {
     public final static int CACHE_COUNT = 10;
 
     public final static String ARG = "video_url";
+    public final static String ARG_SELF = "disable_resume";
     public final static class Builder {
         private final Bundle bundle = new Bundle();
 
@@ -54,6 +50,11 @@ public class AppShortVideosFragment extends ParentFragment {
             if (null != urls && !urls.isEmpty()) {
                 bundle.putStringArrayList(ARG, urls);
             }
+            return this;
+        }
+
+        public Builder disableSelfManager() {
+            bundle.putBoolean(ARG_SELF, true);
             return this;
         }
 
@@ -66,20 +67,18 @@ public class AppShortVideosFragment extends ParentFragment {
 
     private AppShortVideosActivity parentActivity;
     private ShortLifecycleModel parentViewModel;
-
     public AppShortVideosActivity getParentActivity() {
         if (getAlive()) {
             return null != parentActivity && parentActivity.availableActivity()? parentActivity: null;
         }
         return null;
     }
-
     public ShortLifecycleModel getParentViewModel() {
         return parentViewModel;
     }
 
     public CacheDataSource.Factory getCacheFactory() {
-        if (null != App.app) {
+        if (null != App.app && null != App.app.cache) {
             return new CacheDataSource.Factory()
                     .setCache(App.app.cache)
                     .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(getParentActivity()))
@@ -110,13 +109,14 @@ public class AppShortVideosFragment extends ParentFragment {
         super.onDetach();
     }
 
-    // TODO: 这个地方应该是传递Video，而不是连接，要改
     private int currentIndex = 0;
-    private final ArrayList<String> videoUrlList = new ArrayList<>();
+    private final ArrayList<String> videoUrlList = new ArrayList<>(); // TODO: 这个地方应该是传递Video，而不是链接，要改
 
     private AppFragmentShortVideosBinding binding;
     private VideoAdapter videoAdapter;
     private boolean playAble; // 只有可见时才能播放
+    private boolean enableResume = true;
+    private boolean iCanPlayWhenReady = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -126,6 +126,7 @@ public class AppShortVideosFragment extends ParentFragment {
         binding = null;
         videoAdapter = null;
         playAble = false;
+        enableResume = true;
 
         final Bundle arguments = getArguments();
         if (null != arguments) {
@@ -133,6 +134,7 @@ public class AppShortVideosFragment extends ParentFragment {
             if (null != stringArrayList && !stringArrayList.isEmpty()) {
                 videoUrlList.addAll(stringArrayList);
             }
+            enableResume = !arguments.getBoolean(ARG_SELF, false);
         }
     }
 
@@ -145,10 +147,9 @@ public class AppShortVideosFragment extends ParentFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         final AppShortVideosActivity iParentActivity = getParentActivity();
         if (null != iParentActivity) {
-            videoAdapter = new VideoAdapter(iParentActivity, new MyController() {
+            videoAdapter = new VideoAdapter(iParentActivity, getCacheFactory(), new MyController() {
                 private boolean isPlaying = false;
                 private VideoHolder iViewHolder = null;
 
@@ -172,16 +173,14 @@ public class AppShortVideosFragment extends ParentFragment {
 
                 private void init() {
                     if (null == iViewHolder) return;
+
                     final CacheDataSource.Factory cacheFactory = getCacheFactory();
-                    if (getActive() && null != cacheFactory) {
+                    if (getAlive() && null != cacheFactory) {
                         final MediaItem mediaItem = MediaItem.fromUri(iViewHolder.myVideo.video);
                         final ProgressiveMediaSource mediaSource = new ProgressiveMediaSource.Factory(getCacheFactory()).createMediaSource(mediaItem);
                         iViewHolder.reset();
                         iViewHolder.iPlayer.setMediaSource(mediaSource);
                         iViewHolder.iPlayer.prepare();
-                        if (null != iViewHolder) {
-                            Logger.warn("VideoY", iViewHolder.myVideo.video + " -- RePrepare");
-                        }
                     }
                     isPlaying = false;
                 }
@@ -196,7 +195,6 @@ public class AppShortVideosFragment extends ParentFragment {
                             reInitFlag = false;
                             init();
                         }
-
                         iViewHolder.iPlayer.play();
                         isPlaying = true;
 
@@ -211,9 +209,12 @@ public class AppShortVideosFragment extends ParentFragment {
                     if (null != iViewHolder) {
                         isPlaying = false;
                         iViewHolder.iPlayer.pause();
+
                         if (stop) {
                             iViewHolder.iPlayer.stop();
+                            reInitFlag = true;
                         }
+
                         if (release) {
                             iViewHolder.iPlayer.release();
                         }
@@ -223,20 +224,20 @@ public class AppShortVideosFragment extends ParentFragment {
 
             binding.shortVideosList.setAdapter(videoAdapter);
             binding.shortVideosList.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-                private final static int MAX_COUNT = 1024;
+                private final static int MAX_COUNT = 1024; // TODO: 限制列表最大item数量
 
                 private int lastPos = -1;
 
                 @Override
                 public void onPageSelected(int position) {
                     super.onPageSelected(position);
+
                     if (null == videoAdapter) return;
                     if (lastPos == position) return;
                     lastPos = position;
 
                     // 如果滑到新Item的时候，先把页面上的视频停掉，再看新视频
                     videoAdapter.controller.pause(false, false);
-                    Logger.debug("Video", "onPageSelected");
                     final View iView = binding.shortVideosList.getChildAt(0);
                     if (iView instanceof RecyclerView) {
                         final RecyclerView.ViewHolder vh = ((RecyclerView) iView).findViewHolderForAdapterPosition(position);
@@ -245,22 +246,22 @@ public class AppShortVideosFragment extends ParentFragment {
                             videoAdapter.controller.play();
                         }
                     }
-
                     addData(position);
                 }
 
                 public void addData(int position) {
                     final int itemCount = videoAdapter.getItemCount();
+                    if (itemCount >= MAX_COUNT) return;
+
                     if (position == itemCount - 2) {
                         final ArrayList<MyVideo> tempMyVideos = new ArrayList<>();
                         final int size = videoUrlList.size();
                         for (int i = 0; i < CACHE_COUNT; i++) {
                             currentIndex = (currentIndex+1) % size;
-                            // TODO: 这个地方应该是传递Video，而不是连接，要改
+                            // TODO: 这个地方应该是传递Video，而不是链接。要改
                             tempMyVideos.add(new MyVideo(videoUrlList.get(currentIndex)));
                         }
                         videoAdapter.addData(tempMyVideos);
-                        MyToast.makeText(getParentActivity(), "Add Data", Toast.LENGTH_SHORT);
                     }
                 }
             });
@@ -274,28 +275,46 @@ public class AppShortVideosFragment extends ParentFragment {
                 tempMyVideos.add(new MyVideo(videoUrlList.get(currentIndex)));
             }
             videoAdapter.addData(tempMyVideos);
+
+            if (iCanPlayWhenReady) {
+                iCanPlayWhenReady = false;
+                playAble = true;
+                videoAdapter.controller.play();
+            }
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        playAble = true;
-        gonnaPlay();
+        if (enableResume) {
+            gonnaPlay();
+        }
+    }
+
+    // FragmentContainer add|hide 在其中，会自动触发onResume
+    public void disable() {
+        enableResume = false;
     }
 
     public void gonnaPlay() {
-        if (null != videoAdapter && null != videoAdapter.controller) videoAdapter.controller.play();
+        if (getAlive()) {
+            playAble = true;
+            if (null != videoAdapter && null != videoAdapter.controller) {
+                videoAdapter.controller.play();
+            }
+        } else {
+            iCanPlayWhenReady = true;
+        }
     }
 
     @Override
     public void onPause() {
-        playAble = false;
         pause();
         super.onPause();
     }
-
     public void pause() {
+        playAble = false;
         if (null != videoAdapter && null != videoAdapter.controller) {
             videoAdapter.controller.pause(false, false);
         }
@@ -303,35 +322,21 @@ public class AppShortVideosFragment extends ParentFragment {
 
     @Override
     public void onStop() {
-        playAble = false;
         stop();
         super.onStop();
     }
-
     public void stop() {
+        playAble = false;
         if (null != videoAdapter && null != videoAdapter.controller) {
             videoAdapter.controller.pause(true, false);
         }
     }
 
     @Override
-    public void onHiddenChanged(boolean hidden) {
-        super.onHiddenChanged(hidden);
-        if (hidden) {
-            playAble = false;
-            pause();
-        } else {
-            gonnaPlay();
-        }
-    }
-
-    @Override
     public void onDestroy() {
-        playAble = false;
         destroy();
         super.onDestroy();
     }
-
     public void destroy() {
         playAble = false;
         if (null != videoAdapter && null != videoAdapter.controller) {
@@ -339,35 +344,31 @@ public class AppShortVideosFragment extends ParentFragment {
         }
     }
 
-    public interface MyController {
-        void setViewHolder(VideoHolder videoHolder);
-
-        void play();
-        void pause(boolean stop, boolean release);
-
-        void onClicked(View view, int pos);
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (hidden) {
+            pause();
+        }
     }
 
+    public interface MyController {
+        void setViewHolder(VideoHolder videoHolder);
+        void play();
+        void pause(boolean stop, boolean release);
+        void onClicked(View view, int pos);
+    }
     public final static class VideoHolder extends RecyclerView.ViewHolder {
         public final AppShortVideoItemBinding binding;
         public final StyledPlayerView playerView;
-
+        private boolean availablePlayer = true;
         private final ExoPlayer iPlayer;
-
         public MyVideo myVideo;
-
         public boolean showLoadingBar = true;
         private boolean showBuffering = false;
 
         private boolean preloading = true; // 让初始化LoadingBar 只显示一次，不要每加载一下就显示出来
         private boolean hiddenBar = false;
-
-        public void reset() {
-            preloading = true;
-            hiddenBar = false;
-            showLoadingBar = true;
-            showBuffering = false;
-        }
 
         public VideoHolder(@NonNull AppShortVideoItemBinding mBinding, @NonNull final Context context) {
             super(mBinding.getRoot());
@@ -375,10 +376,13 @@ public class AppShortVideosFragment extends ParentFragment {
             this.binding = mBinding;
             this.playerView = this.binding.videoItem;
 
+            final DefaultRenderersFactory defaultRenderersFactory = new DefaultRenderersFactory(context)
+                    .setEnableAudioTrackPlaybackParams(true)
+                    .setEnableDecoderFallback(true);
             this.iPlayer = new ExoPlayer.Builder(context)
-                    .setRenderersFactory(new DefaultRenderersFactory(context)
-                    .setEnableDecoderFallback(true))
+                    .setRenderersFactory(defaultRenderersFactory)
                     .build();
+
             this.iPlayer.addListener(new Player.Listener() {
                 // 测试中
                 @Override
@@ -399,6 +403,7 @@ public class AppShortVideosFragment extends ParentFragment {
                 public void onPlayerError(@NonNull PlaybackException error) {
                     Player.Listener.super.onPlayerError(error);
                     if (context instanceof Activity) {
+                        // TODO: 这里出现错误了
                         MySnackBar.show((Activity) context, binding.getRoot(), error.getMessage(), Snackbar.LENGTH_SHORT);
                     }
                     binding.loading.setVisibility(View.INVISIBLE);
@@ -414,7 +419,6 @@ public class AppShortVideosFragment extends ParentFragment {
                     // 每次播放都会执行
                     showLoadingBar = false;
                     binding.loading.setVisibility(View.INVISIBLE);
-                    Logger.debug("Video", "首帧渲染成功");
                 }
             });
             this.iPlayer.setRepeatMode(Player.REPEAT_MODE_ONE);
@@ -422,32 +426,37 @@ public class AppShortVideosFragment extends ParentFragment {
             this.playerView.setPlayer(this.iPlayer);
         }
 
+        public void reset() {
+            preloading = true;
+            hiddenBar = false;
+            showLoadingBar = true;
+            showBuffering = false;
+        }
+
         public boolean canPreload() {
-            return null != myVideo && VerifyUtil.aValidWebUrl(myVideo.video);
+            return availablePlayer && null != myVideo && VerifyUtil.aValidWebUrl(myVideo.video);
+        }
+
+        public void releasePlayer() {
+            if (availablePlayer && null != iPlayer) {
+                availablePlayer = false;
+                iPlayer.stop();
+                iPlayer.release();
+            }
         }
     }
-
     public final static class VideoAdapter extends RecyclerView.Adapter<VideoHolder> {
         public final Activity activity;
+        public final CacheDataSource.Factory cacheFactory;
         public final ArrayList<MyVideo> videos;
 
         public final MyController controller;
 
-        public VideoAdapter(@NonNull final Activity mActivity, @NonNull final MyController iController) {
+        public VideoAdapter(@NonNull final Activity mActivity, CacheDataSource.Factory iCacheFactory, @NonNull final MyController iController) {
             this.activity = mActivity;
+            this.cacheFactory = iCacheFactory;
             this.videos = new ArrayList<>();
-
             this.controller = iController;
-        }
-
-        public CacheDataSource.Factory getCacheFactory() {
-            if (null != App.app) {
-                return new CacheDataSource.Factory()
-                        .setCache(App.app.cache)
-                        .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(activity))
-                        .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
-            }
-            return null;
         }
 
         @NonNull
@@ -459,18 +468,15 @@ public class AppShortVideosFragment extends ParentFragment {
         @Override
         public void onBindViewHolder(@NonNull final VideoHolder holder, final int position) {
             holder.myVideo = videos.get(position);
-            holder.binding.loading.setVisibility(holder.showLoadingBar? View.VISIBLE: View.INVISIBLE);
 
-            final CacheDataSource.Factory cacheFactory = getCacheFactory();
             if (null != cacheFactory && holder.canPreload()) {
                 final MediaItem mediaItem = MediaItem.fromUri(holder.myVideo.video);
-                final ProgressiveMediaSource mediaSource = new ProgressiveMediaSource.Factory(getCacheFactory()).createMediaSource(mediaItem);
+                final ProgressiveMediaSource mediaSource = new ProgressiveMediaSource.Factory(cacheFactory).createMediaSource(mediaItem);
                 holder.iPlayer.setMediaSource(mediaSource);
                 holder.iPlayer.prepare();
-
-                Logger.debug("Video-RV-Bind", "正在提前预缓存或者准备视频");
             }
 
+            holder.binding.loading.setVisibility(holder.showLoadingBar? View.VISIBLE: View.INVISIBLE);
             holder.binding.getRoot().setOnClickListener(v -> {
                 controller.onClicked(v, holder.getAbsoluteAdapterPosition());
             });
@@ -485,12 +491,12 @@ public class AppShortVideosFragment extends ParentFragment {
             if (null == myVideos || myVideos.isEmpty()) {
                 return;
             }
+
             final int from = videos.size();
             videos.addAll(myVideos);
             notifyItemRangeInserted(from, myVideos.size());
         }
     }
-
     public final static class MyVideo {
         public final String video;
 

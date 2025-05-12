@@ -7,10 +7,14 @@
     android:layout_height="match_parent"
     tools:context=".fragment.AppVideoTagsFragment">
 
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/video_tags"
+    <com.lena.android.view.NestedScrollableHost
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent">
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/video_tags"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </com.lena.android.view.NestedScrollableHost>
 
     <LinearLayout
         android:id="@+id/tabs"
